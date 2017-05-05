@@ -36,8 +36,12 @@ class Ingester():
         """
         raise NotImplementedError()
      
-    def parse_callback(self, result):
+    def parse_callback(self, result, add_ingester):
         """
+        result - return value of getPage
+        add_ingester - method on Predator that adds an
+        ingester to the event list
+
         Returns an array of image URLs to download
 
         Must set is_blocking to False 

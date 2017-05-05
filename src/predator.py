@@ -13,9 +13,15 @@ class Predator():
         Returns a list of instantiated ingesters
         """
         return [
-            ImageIngester('https://pbs.twimg.com/media/C_BjnG5XYAIhWBr.jpg')
         ]
-    
+
+    def add_ingester(self, ingester):
+        """
+        Adds an Ingester subclass. Typically 
+        called by another ingester.
+        """
+        self.ingesters.append(ingester)
+
     def manage_ingesters(self):
         """
         Called in a loop, checks on ingesters and manages
@@ -36,7 +42,7 @@ class Predator():
                 if ingester.should_run():
                     ingester.is_blocking = True
                     d = getPage(ingester.get_url())
-                    d.addCallback(ingester.parse_callback)
+                    d.addCallback(ingester.parse_callback, self.add_ingester)
                     d.addErrback(ingester.parse_error)
 
 

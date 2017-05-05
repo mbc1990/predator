@@ -10,6 +10,8 @@ class ImageIngester(Ingester):
 
     IMAGE_DIR = 'images/'
 
+    is_complete = False
+
     def __init__(self, image_url):
         self.image_url = image_url
 
@@ -23,7 +25,7 @@ class ImageIngester(Ingester):
     def get_url(self):
         return self.image_url
      
-    def parse_callback(self, result):
+    def parse_callback(self, result, add_ingester):
         """
         Handles the deduplication and saving step of an image.
         Right now this only saves to disk, but it should be
@@ -33,8 +35,9 @@ class ImageIngester(Ingester):
         extension = self.image_url.split('.')[-1]
         with open(self.IMAGE_DIR+fname+'.'+extension, 'wb') as f:
             f.write(result)
-
+        
         self.is_blocking = False
+        self.is_complete = True
     
     def parse_error(self, error):
         """
@@ -45,6 +48,6 @@ class ImageIngester(Ingester):
 
     def should_destroy(self):
         """
-        Each ImageIngester should only ever run once
+        Each ImageIngester should only run successfully once.
         """
-        return not self.is_blocking 
+        return self.is_complete 
