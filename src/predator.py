@@ -1,3 +1,4 @@
+from image_ingester import ImageIngester
 from twisted.internet import reactor, task
 from twisted.web.client import getPage
 
@@ -11,15 +12,22 @@ class Predator():
         """
         Returns a list of instantiated ingesters
         """
-        return []
-
+        return [
+            ImageIngester('https://pbs.twimg.com/media/C_BjnG5XYAIhWBr.jpg')
+        ]
+    
     def manage_ingesters(self):
         """
         Called in a loop, checks on ingesters and manages
         their output
         """
-        while True:
+        while self.ingesters:
             for ingester in self.ingesters:
+                
+                # First, check if we can remove this ingester
+                if ingester.should_destroy():
+                    self.ingesters.remove(ingester)                    
+
                 # Currently waiting for a callback from this
                 # ingester
                 if ingester.is_blocking:
@@ -30,15 +38,14 @@ class Predator():
                     d = getPage(ingester.get_url())
                     d.addCallback(ingester.parse_callback)
                     d.addErrback(ingester.parse_error)
-                
-                if ingester.should_destroy():
-                    self.ingesters.remove(ingester)                    
 
 
 def main():
     predator = Predator()
+
     manage = task.LoopingCall(predator.manage_ingesters)
     manage.start(1)
+
     reactor.run()
 
 
