@@ -54,7 +54,7 @@ class Ingester():
 
     def should_destroy(self):
         """
-        Returns true if the ingester is no longer needed anc
+        Returns true if the ingester is no longer needed and
         can be removed from the event loop
         """
         raise NotImplementedError()

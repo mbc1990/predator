@@ -30,6 +30,9 @@ class Predator():
                     d = getPage(ingester.get_url())
                     d.addCallback(ingester.parse_callback)
                     d.addErrback(ingester.parse_error)
+                
+                if ingester.should_destroy():
+                    self.ingesters.remove(ingester)                    
 
 
 def main():
