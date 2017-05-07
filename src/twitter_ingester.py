@@ -20,7 +20,7 @@ class TwitterIngester(Ingester):
     last_runtime = None
     
     def __init__(self, screen_name, source_name, bearer_token, add_ingester):
-        self.url = self.ENDPOINT + '?screen_name='+str(screen_name)
+        self.url = self.ENDPOINT + '?screen_name='+str(screen_name)+'&count=20'
         self.source = source_name
         self.bearer_token = bearer_token
         self.add_ingester = add_ingester
