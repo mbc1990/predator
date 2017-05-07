@@ -9,17 +9,25 @@ class Predator():
     """
     Event based consumer of cute animal photos
     """
+    MAX_CONCURRENT_CONNECTIONS = 5
 
     def __init__(self, config):
-        self.ingesters = self.initialize_ingesters(config['bearer_token'])
+        self.ingesters = self.initialize_ingesters(config['bearer_token'], config['twitter_ingesters'])
 
-    def initialize_ingesters(self, twitter_bearer_token):
+    def initialize_ingesters(self, twitter_bearer_token, twitter_ingesters):
         """
         Returns a list of instantiated ingesters
         """
-        return [
-            TwitterIngester('samoyedsbot', 'Samoyeds Bot (Twitter)', twitter_bearer_token, self.add_image_ingester)
-        ]
+        ingesters = []
+        for ing in twitter_ingesters:
+            screen_name = ing['screen_name']
+            source_name = ing['source_name']
+            ti = TwitterIngester(screen_name, source_name,
+                                 twitter_bearer_token,
+                                 self.add_image_ingester)
+            ingesters.append(ti)
+
+        return ingesters
 
     def add_image_ingester(self, url, source_name):
         """
@@ -34,6 +42,7 @@ class Predator():
         Called in a loop, checks on ingesters and manages
         their output
         """
+        concurrent = 0
         for ingester in self.ingesters:
             
             # First, check if we can remove this ingester
@@ -43,9 +52,10 @@ class Predator():
             # Currently waiting for a callback from this
             # ingester
             if ingester.is_blocking:
+                concurrent += 1
                 continue
             
-            if ingester.should_run():
+            if ingester.should_run() and concurrent < self.MAX_CONCURRENT_CONNECTIONS:
                 ingester.is_blocking = True
                 url = ingester.get_url()
                 d = getPage(ingester.get_url(), timeout=3,

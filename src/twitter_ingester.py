@@ -14,13 +14,13 @@ class TwitterIngester(Ingester):
     ENDPOINT = 'https://api.twitter.com/1.1/statuses/user_timeline.json'
 
     # How many seconds between runs
-    RUN_RATE_SECONDS = 5 
+    RUN_RATE_SECONDS = 60 * 30
     
     # Last time this ingester was run
     last_runtime = None
     
     def __init__(self, screen_name, source_name, bearer_token, add_ingester):
-        self.url = self.ENDPOINT + '?screen_name='+screen_name+'&count=1'
+        self.url = self.ENDPOINT + '?screen_name='+str(screen_name)+'&count=20'
         self.source = source_name
         self.bearer_token = bearer_token
         self.add_ingester = add_ingester
