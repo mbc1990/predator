@@ -34,7 +34,7 @@ class Ingester():
         Returns header parameters, use for authenticating API requests
         in ingesters
         """
-        raise {}
+        return {}
 
     def get_url(self):
         """

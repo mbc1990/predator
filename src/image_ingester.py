@@ -12,12 +12,12 @@ class ImageIngester(Ingester):
 
     is_complete = False
 
-    def __init__(self, image_url):
+    def __init__(self, image_url, source_name):
         self.image_url = image_url
+        self.source_name = source_name
 
-    @property 
     def source_name(self):
-        return "Image Ingester"
+        return self.source_name
     
     def should_run(self):
         return True
@@ -25,7 +25,7 @@ class ImageIngester(Ingester):
     def get_url(self):
         return self.image_url
      
-    def parse_callback(self, result, add_ingester):
+    def parse_callback(self, result, add_ingester=None):
         """
         Handles the deduplication and saving step of an image.
         Right now this only saves to disk, but it should be
@@ -38,12 +38,12 @@ class ImageIngester(Ingester):
         
         self.is_blocking = False
         self.is_complete = True
+        print fname + " saved to disk"
     
     def parse_error(self, error):
         """
         TODO: Logging
         """
-        print error
         self.is_blocking = False
 
     def should_destroy(self):

@@ -6,6 +6,9 @@ from twisted.internet import reactor, task
 from twisted.web.client import getPage
 
 class Predator():
+    """
+    Event based consumer of cute animal photos
+    """
 
     def __init__(self, config):
         self.ingesters = self.initialize_ingesters(config['bearer_token'])
@@ -15,22 +18,22 @@ class Predator():
         Returns a list of instantiated ingesters
         """
         return [
-            TwitterIngester('samoyedsbot', 'Samoyeds Bot (Twitter)', twitter_bearer_token)
+            TwitterIngester('samoyedsbot', 'Samoyeds Bot (Twitter)', twitter_bearer_token, self.add_image_ingester)
         ]
 
-    def add_ingester(self, ingester):
+    def add_image_ingester(self, url, source_name):
         """
-        Adds an Ingester subclass. Typically 
-        called by another ingester.
+        Adds a new image ingester, usually passed to a 
+        different ingester that finds image URLs
         """
-        self.ingesters.append(ingester)
+        image_ingester = ImageIngester(url, source_name)
+        self.ingesters.append(image_ingester)
 
     def manage_ingesters(self):
         """
         Called in a loop, checks on ingesters and manages
         their output
         """
-        # while self.ingesters:
         for ingester in self.ingesters:
             
             # First, check if we can remove this ingester
@@ -44,6 +47,7 @@ class Predator():
             
             if ingester.should_run():
                 ingester.is_blocking = True
+                url = ingester.get_url()
                 d = getPage(ingester.get_url(), timeout=3,
                             headers=ingester.get_headers())
                 d.addCallback(ingester.parse_callback)
