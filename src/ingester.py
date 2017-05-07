@@ -17,7 +17,6 @@ class Ingester():
     # set True while waiting for a callback
     is_blocking = False
 
-    @property 
     def source_name(self):
         """
         Returns a human readable source name e.g. "r/cute front page"
@@ -30,13 +29,20 @@ class Ingester():
         """
         raise NotImplementedError()
 
+    def get_headers(self):
+        """
+        Returns header parameters, use for authenticating API requests
+        in ingesters
+        """
+        raise {}
+
     def get_url(self):
         """
         Returns the URL to be queried
         """
         raise NotImplementedError()
      
-    def parse_callback(self, result, add_ingester):
+    def parse_callback(self, result, add_ingester=None):
         """
         result - return value of getPage
         add_ingester - method on Predator that adds an

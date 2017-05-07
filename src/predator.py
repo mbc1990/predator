@@ -1,18 +1,21 @@
+import json
+import sys
 from image_ingester import ImageIngester
+from twitter_ingester import TwitterIngester
 from twisted.internet import reactor, task
 from twisted.web.client import getPage
 
 class Predator():
 
-    def __init__(self):
+    def __init__(self, config):
+        self.ingesters = self.initialize_ingesters(config['bearer_token'])
 
-        self.ingesters = self.initialize_ingesters()
-
-    def initialize_ingesters(self):
+    def initialize_ingesters(self, twitter_bearer_token):
         """
         Returns a list of instantiated ingesters
         """
         return [
+            TwitterIngester('samoyedsbot', 'Samoyeds Bot (Twitter)', twitter_bearer_token)
         ]
 
     def add_ingester(self, ingester):
@@ -27,27 +30,33 @@ class Predator():
         Called in a loop, checks on ingesters and manages
         their output
         """
-        while self.ingesters:
-            for ingester in self.ingesters:
-                
-                # First, check if we can remove this ingester
-                if ingester.should_destroy():
-                    self.ingesters.remove(ingester)                    
+        # while self.ingesters:
+        for ingester in self.ingesters:
+            
+            # First, check if we can remove this ingester
+            if ingester.should_destroy():
+                self.ingesters.remove(ingester)                    
 
-                # Currently waiting for a callback from this
-                # ingester
-                if ingester.is_blocking:
-                    continue
-                
-                if ingester.should_run():
-                    ingester.is_blocking = True
-                    d = getPage(ingester.get_url())
-                    d.addCallback(ingester.parse_callback, self.add_ingester)
-                    d.addErrback(ingester.parse_error)
+            # Currently waiting for a callback from this
+            # ingester
+            if ingester.is_blocking:
+                continue
+            
+            if ingester.should_run():
+                ingester.is_blocking = True
+                d = getPage(ingester.get_url(), timeout=3,
+                            headers=ingester.get_headers())
+                d.addCallback(ingester.parse_callback)
+                d.addErrback(ingester.parse_error)
 
 
 def main():
-    predator = Predator()
+    config_path = sys.argv[1]
+
+    with open(config_path) as config_file:    
+        config = json.load(config_file)
+
+    predator = Predator(config)
 
     manage = task.LoopingCall(predator.manage_ingesters)
     manage.start(1)
